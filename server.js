@@ -48,6 +48,31 @@ wss.on('connection', (ws) => {
       return;
     }
 
+    // "Jugar online": todos van a la misma sala (por ejemplo 1234). Si no existe, el primero
+    // la crea y es el anfitrión; si ya existe, entra (aunque estén jugando: mira y juega la próxima)
+    if (msg.t === 'play') {
+      if (ws.room) return;
+      const code = String(msg.code || '1234').trim().toUpperCase().slice(0, 8);
+      let room = rooms.get(code);
+      if (!room) {
+        room = { code, peers: new Map([[0, ws]]), started: false };
+        rooms.set(code, room);
+        ws.room = room;
+        ws.id = 0;
+        send(ws, { t: 'created', code, id: 0 });
+        return;
+      }
+      let id = 1;
+      while (room.peers.has(id) && id < MAX_PLAYERS) id++;
+      if (room.peers.has(id) || id >= MAX_PLAYERS) return send(ws, { t: 'error', msg: 'La sala está llena (ya hay 4 jugando). Esperá a que alguien salga y probá de nuevo.' });
+      room.peers.set(id, ws);
+      ws.room = room;
+      ws.id = id;
+      send(ws, { t: 'joined', code: room.code, id, started: room.started });
+      send(room.peers.get(0), { t: 'peer-join', id });
+      return;
+    }
+
     // unirse a una sala con su código
     if (msg.t === 'join') {
       if (ws.room) return;

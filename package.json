@@ -1,0 +1,16 @@
+{
+  "name": "jumpblock-server",
+  "version": "1.0.0",
+  "description": "Servidor online de JumpBlock: une a los jugadores en salas con código",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
